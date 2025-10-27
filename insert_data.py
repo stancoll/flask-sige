@@ -9,48 +9,56 @@ def insert_data():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. Créer un utilisateur test
     nom = "Utilisateur Test"
     email = "test@example.com"
     password = hash_password("motdepasse")
 
-    cursor.execute("""
-        INSERT INTO users (nom, email, mot_de_passe) 
-        VALUES (%s, %s, %s)
-    """, (nom, email, password))
-    
-    user_id = cursor.lastrowid  # ID utilisé pour les données suivantes
+    # 🔎 Vérifie si l'utilisateur existe déjà
+    cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+    existing_user = cursor.fetchone()
 
-    # 2. Ajouter une consommation
-    cursor.execute("""
-        INSERT INTO consommation (user_id, valeur, type, date)
-        VALUES (%s, %s, %s, NOW())
-    """, (user_id, 2500, "chauffage"))
+    if existing_user:
+        user_id = existing_user[0]
+        print(f"⚠️ L'utilisateur '{email}' existe déjà (id={user_id}), aucune insertion faite.")
+    else:
+        # 🧩 Crée un nouvel utilisateur
+        cursor.execute("""
+            INSERT INTO users (nom, email, mot_de_passe) 
+            VALUES (%s, %s, %s)
+        """, (nom, email, password))
+        user_id = cursor.lastrowid
+        print(f"✅ Nouvel utilisateur inséré : {email} (id={user_id})")
 
-    # 3. Ajouter une production
-    cursor.execute("""
-        INSERT INTO production (user_id, valeur, date)
-        VALUES (%s, %s, NOW())
-    """, (user_id, 1500))
+        # 🪫 Ajoute une consommation
+        cursor.execute("""
+            INSERT INTO consommation (user_id, valeur, type, date)
+            VALUES (%s, %s, %s, NOW())
+        """, (user_id, 2500, "chauffage"))
 
-    # 4. Ajouter un appareil via modèle
-    insert_appareil(cursor, {
-        "user_id": user_id,
-        "nom": "Climatiseur",
-        "categorie": "chauffage",
-        "consommationQuotidienne": 3.5,
-        "puissanceWatt": 1200,
-        "est_actif": True
-    })
+        # ⚡ Ajoute une production
+        cursor.execute("""
+            INSERT INTO production (user_id, valeur, date)
+            VALUES (%s, %s, NOW())
+        """, (user_id, 1500))
 
-    conn.commit()
+        # 🧰 Ajoute un appareil via modèle
+        insert_appareil(cursor, {
+            "user_id": user_id,
+            "nom": "Climatiseur",
+            "categorie": "chauffage",
+            "consommationQuotidienne": 3.5,
+            "puissanceWatt": 1200,
+            "est_actif": True
+        })
+
+        conn.commit()
+
     cursor.close()
     conn.close()
 
-    print("✅ Données de test insérées avec succès.")
+    print("\n✅ Script terminé avec succès.")
     print(f"📧 Email : {email}")
     print(f"🔑 Mot de passe : motdepasse")
-    print(f"👤 User ID : {user_id}")
 
 if __name__ == "__main__":
     insert_data()
