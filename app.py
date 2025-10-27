@@ -25,7 +25,7 @@ if not SECRET:
 
 # ✅ Configure la clé dans Flask et pour JWT
 app.config['SECRET_KEY'] = SECRET
-app.config['JWT_SECRET_KEY'] = SECRET  # important si tu utilises Flask-JWT-Extended
+app.config['JWT_SECRET_KEY'] = SECRET
 
 # Activer CORS
 CORS(app)
@@ -37,6 +37,28 @@ app.register_blueprint(simulation_bp, url_prefix="/simulation")
 app.register_blueprint(appareil_bp, url_prefix="/appareils")
 app.register_blueprint(alert_bp, url_prefix="/alerts")
 app.register_blueprint(user_bp, url_prefix="/user")
+
+# Route d'accueil
+@app.route('/')
+def home():
+    return {
+        "message": "🚀 API EcoWatt Backend en ligne",
+        "status": "running",
+        "version": "1.0.0",
+        "endpoints": {
+            "auth": "/auth/*",
+            "energy": "/energy/*",
+            "simulation": "/simulation/*",
+            "appareils": "/appareils/*",
+            "alerts": "/alerts/*",
+            "user": "/user/*"
+        }
+    }, 200
+
+# Route de santé (health check)
+@app.route('/health')
+def health():
+    return {"status": "healthy"}, 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000)) 
