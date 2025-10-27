@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from config import get_db_connection
 from utils.password_utils import hash_password
 from models.appareil_model import insert_appareil
@@ -7,11 +10,16 @@ def insert_data():
     cursor = conn.cursor()
 
     # 1. Créer un utilisateur test
+    nom = "Utilisateur Test"
     email = "test@example.com"
     password = hash_password("motdepasse")
 
-    cursor.execute("INSERT INTO users (email, mot_de_passe) VALUES (%s, %s)", (email, password))
-    user_id = cursor.lastrowid  # ← ID utilisé pour les données suivantes
+    cursor.execute("""
+        INSERT INTO users (nom, email, mot_de_passe) 
+        VALUES (%s, %s, %s)
+    """, (nom, email, password))
+    
+    user_id = cursor.lastrowid  # ID utilisé pour les données suivantes
 
     # 2. Ajouter une consommation
     cursor.execute("""
@@ -40,6 +48,9 @@ def insert_data():
     conn.close()
 
     print("✅ Données de test insérées avec succès.")
+    print(f"📧 Email : {email}")
+    print(f"🔑 Mot de passe : motdepasse")
+    print(f"👤 User ID : {user_id}")
 
 if __name__ == "__main__":
     insert_data()
